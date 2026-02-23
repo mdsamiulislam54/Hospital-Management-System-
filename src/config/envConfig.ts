@@ -8,6 +8,7 @@ export const envConfig = {
     BACKEND_URL: process.env.BACKEND_URL || "",
     FRONTEND_URL: process.env.FRONTEND_URL || "",
     PORT: process.env.PORT || "5000",
+    NODE_ENV: process.env.NODE_ENV || "development",
 
 
 };

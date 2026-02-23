@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(corsConfig)
 
 app.get('/', (req, res) => {
-    res.send('Hello World! My name is Satyarth and I am learning MERN stack development. This is my first project using Express.js and MongoDB. I am excited to build more projects and learn new technologies in the future.');
+    res.send('Hello World!');
 });
 
 app.use(indexRouter)
