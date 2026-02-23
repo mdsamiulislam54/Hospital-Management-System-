@@ -1,5 +1,6 @@
 import { User } from "../../../generated/client";
 import { auth } from "../../lib/auth";
+import { prisma } from "../../lib/prisma";
 const createUser = async (payload: User & { password: string }) => {
     const { name, email, password } = payload;
     const user = await auth.api.signUpEmail({
@@ -9,7 +10,22 @@ const createUser = async (payload: User & { password: string }) => {
             password
         }
     });
-    return user;
+
+    const patient  = await prisma.$transaction(async(tx)=>{
+        const patientTx = await tx.patient.create({
+            data:{
+                userId: user.user.id,
+                name: user.user.name,
+                email: user.user.email,
+            }
+        });
+
+        return patientTx;
+    })
+    return {
+        ...user,
+        patient
+    };
 };
 const signIn = async (payload: User & { password: string }) => {
     const { email, password } = payload;
