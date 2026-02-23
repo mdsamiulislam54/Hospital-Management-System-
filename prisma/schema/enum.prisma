@@ -1,12 +1,17 @@
 enum UserRole {
-    SUPER_ADMIN
-    ADMIN
-    DOCTOR
-    PATIENT
+  SUPER_ADMIN
+  ADMIN
+  DOCTOR
+  PATIENT
 }
 
 enum Status {
-    ACTIVE
-    INACTIVE
-    BLOCKED
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum Gender {
+  MALE
+  FEMALE
 }

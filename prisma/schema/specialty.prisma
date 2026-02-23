@@ -1,10 +1,12 @@
-model specialty {
-    id          String   @id @default(uuid())
-    title       String   @unique
-    icon        String?
-    description String?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+model Specialty {
+  id                String            @id @default(uuid())
+  title             String            @unique
+  icon              String?
+  description       String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  doctorSpecialties DoctorSpecialty[]
 
-    @@index([title], name: "idx_specialty_title")
+  @@index([title], name: "idx_specialty_title")
+  @@map("specialty")
 }
