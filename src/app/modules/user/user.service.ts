@@ -73,13 +73,13 @@ const createDoctor = async (payload: ICreateDoctor) => {
                     qualification: true,
                     appointmentFee: true,
                     gender: true,
-                    doctorSpecialties:{
-                        select:{
-                            specialty:{
-                                select:{
+                    doctorSpecialties: {
+                        select: {
+                            specialty: {
+                                select: {
                                     id: true,
                                     title: true,
-                                
+
                                 }
                             }
                         }
@@ -120,6 +120,9 @@ const createDoctor = async (payload: ICreateDoctor) => {
 }
 
 
+
+
+
 export const userService = {
-    createDoctor
+    createDoctor,
 }

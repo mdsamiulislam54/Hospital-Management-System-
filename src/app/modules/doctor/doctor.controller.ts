@@ -1,23 +1,21 @@
 import { Request, Response } from "express";
 import catchAsync from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
+import { doctorService } from "./doctor.service";
 import status from "http-status";
-import { doctorService } from "../doctor/doctor.service";
 
-const createDoctor = catchAsync(async (req: Request, res: Response) => {
+const getAllDoctors = catchAsync(async (req: Request, res: Response) => {
     const data = await doctorService.getAllDoctors();
     sendResponse(res, {
-        httpStatusCode: status.CREATED,
+        httpStatusCode: status.OK,
         success: true,
-        message: "Doctor created successfully",
+        message: "All doctors retrieved successfully",
         data: data
     })
 })
 
 
+export const doctorController = {
+    getAllDoctors,
 
-
-export const userController = {
-    createDoctor,
-   
 }

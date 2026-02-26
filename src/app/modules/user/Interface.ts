@@ -22,3 +22,4 @@ export interface ICreateDoctor {
 
 
 }
+//    "specialties":["871eb953-e5b4-4e0a-af3a-d30e0efa8fc5","77caafd2-b915-48bc-8267-4a6a914b2abb"]
