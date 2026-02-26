@@ -1,3 +1,4 @@
+import { Doctor } from "../../../generated/client";
 import { prisma } from "../../lib/prisma";
 
 const getAllDoctors = async () => {
@@ -18,12 +19,12 @@ const getAllDoctors = async () => {
             gender: true,
             doctorSpecialties: {
 
-                select:{
+                select: {
                     doctorId: true,
                     id: true,
 
-                    specialty:{
-                        select:{
+                    specialty: {
+                        select: {
                             id: true,
                             title: true,
                             icon: true,
@@ -56,8 +57,58 @@ const getAllDoctors = async () => {
 
 }
 
+const getDoctorById = async (id: string) => {
+    const doctor = await prisma.doctor.findUnique({
+        where: {
+            id: id
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            profilePhoto: true,
+            contactNumber: true,
+            registrationNumber: true,
+            currentWorkingPlace: true,
+            designation: true,
+            experience: true,
+            qualification: true,
+            appointmentFee: true,
 
+            gender: true,
 
+        }
+    });
+    return doctor;
+}
+
+const doctorUpdateById = async (id: string, payload: Partial<Doctor>) => {
+    const doctor = await prisma.doctor.update({
+        where: {
+            id: id
+        },
+        data: payload,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            profilePhoto: true,
+            contactNumber: true,
+            registrationNumber: true,
+            currentWorkingPlace: true,
+            designation: true,
+            experience: true,
+            qualification: true,
+            appointmentFee: true,
+
+            gender: true,
+
+        }
+    });
+    return doctor;
+}
 export const doctorService = {
     getAllDoctors,
+    getDoctorById,
+    doctorUpdateById,
 }
