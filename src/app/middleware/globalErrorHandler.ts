@@ -1,16 +1,25 @@
 
 import { NextFunction, Request, Response } from "express";
-import status from "http-status";
+import z from "zod";
+import { IErrorSource, zodError } from "./zodError";
 
-export const  globalErrorHandler = (err: Error, req: Request, res: Response, _next:NextFunction) => {
+export const globalErrorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
 
-    console.error("Global Error Handler:", err);
-    const statusCode = status.INTERNAL_SERVER_ERROR;
-    const message = err.message || "An unexpected error occurred";
+    let statusCode = 500;
+    let message = err.message || "An unexpected error occurred";
+    let errorSource: IErrorSource[] = [];
 
+    if (err instanceof z.ZodError) {
+        const zodErrorResult = zodError(err);
+        statusCode = zodErrorResult.statusCode;
+        message = zodErrorResult.message;
+        errorSource = zodErrorResult.errorSource;
+    }
     res.status(statusCode).json({
         success: false,
-        message:message
+        statusCode,
+        message: message,
+        errorSource
     });
 
 }
