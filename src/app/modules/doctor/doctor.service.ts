@@ -1,7 +1,7 @@
 import status from "http-status";
 import { Doctor } from "../../../generated/client";
 import { prisma } from "../../lib/prisma";
-import { AppError } from "../../middleware/appError";
+import { AppError } from "../../middleware/AppError";
 
 const getAllDoctors = async () => {
     const doctors = await prisma.doctor.findMany({

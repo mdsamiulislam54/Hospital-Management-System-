@@ -2,7 +2,8 @@ import status from "http-status";
 import { User } from "../../../generated/client";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { AppError } from "../../middleware/appError";
+import { AppError } from "../../middleware/AppError";
+import { tokenUtils } from "../../utils/token";
 const createUser = async (payload: User & { password: string }) => {
     const { name, email, password } = payload;
     const data = await auth.api.signUpEmail({
@@ -13,10 +14,10 @@ const createUser = async (payload: User & { password: string }) => {
         }
     });
     if (!data.user) {
-        throw new AppError(status.NOT_FOUND,"User creation failed");
+        throw new AppError(status.NOT_FOUND, "User creation failed");
     }
     if (data.user.status !== "ACTIVE") {
-        throw new AppError(status.NOT_FOUND,"User is not active");
+        throw new AppError(status.NOT_FOUND, "User is not active");
     }
 
 
@@ -39,7 +40,7 @@ const createUser = async (payload: User & { password: string }) => {
     } catch (error) {
         console.error("Error creating patient record:", error);
         await prisma.user.delete({ where: { id: data.user.id } });
-        throw new AppError(status.NOT_FOUND,"Failed to create patient record");
+        throw new AppError(status.NOT_FOUND, "Failed to create patient record");
     }
 };
 const signIn = async (payload: User & { password: string }) => {
@@ -52,9 +53,31 @@ const signIn = async (payload: User & { password: string }) => {
     });
 
     if (data.user.status !== "ACTIVE") {
-        throw new AppError(status.NOT_FOUND,"User is not active");
-    }
-    return data;
+        throw new AppError(status.NOT_FOUND, "User is not active");
+    };
+
+    const accessToken = tokenUtils.getAccessToken({
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        emailVerify: data.user.emailVerified,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted
+    });
+    const refreshToken = tokenUtils.getRefreshToken({
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        emailVerify: data.user.emailVerified,
+        status: data.user.status,
+        isDeleted: data.user.isDeleted
+    });
+
+    return {
+        ...data,
+        accessToken,
+        refreshToken
+    };
 };
 const signOut = async (headers: Record<string, string>) => {
     const user = await auth.api.signOut({

@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { ICreateDoctor } from "./Interface";
 import { UserRole } from "../../../generated/enums";
 import { Specialty } from "../../../generated/client";
-import { AppError } from "../../middleware/appError";
+import { AppError } from "../../middleware/AppError";
 import status from "http-status";
 
 
