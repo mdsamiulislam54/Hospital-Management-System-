@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { Status, UserRole } from "../../generated/enums";
 import { envConfig } from "../../config/envConfig";
+import ms from "ms";
 
 export const auth = betterAuth({
 
@@ -10,6 +11,14 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
 
+  session: {
+    expiresIn: ms('1d') / 1000,
+    updateAge: ms('1d') / 1000,
+    cookieCache: {
+      enabled: true,
+      maxAge: ms('1h')
+    }
+  },
   baseURL: envConfig.BACKEND_URL,
 
   trustedOrigins: [
@@ -26,7 +35,7 @@ export const auth = betterAuth({
         httpOnly: true,
         secure: envConfig.NODE_ENV === "production",
         sameSite:
-          envConfig.NODE_ENV === "production" ? "none": "lax",
+          envConfig.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
       },
     },

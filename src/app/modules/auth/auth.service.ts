@@ -33,9 +33,30 @@ const createUser = async (payload: User & { password: string }) => {
 
             return patientTx;
         })
+
+        const accessToken = tokenUtils.getAccessToken({
+            name: data.user.name,
+            email: data.user.email,
+            role: data.user.role,
+            emailVerify: data.user.emailVerified,
+            status: data.user.status,
+            isDeleted: data.user.isDeleted
+        });
+        const refreshToken = tokenUtils.getRefreshToken({
+            name: data.user.name,
+            email: data.user.email,
+            role: data.user.role,
+            emailVerify: data.user.emailVerified,
+            status: data.user.status,
+            isDeleted: data.user.isDeleted
+        });
+
+
         return {
             ...data,
-            patient
+            patient,
+            accessToken,
+            refreshToken
         };
     } catch (error) {
         console.error("Error creating patient record:", error);
@@ -72,6 +93,7 @@ const signIn = async (payload: User & { password: string }) => {
         status: data.user.status,
         isDeleted: data.user.isDeleted
     });
+
 
     return {
         ...data,
