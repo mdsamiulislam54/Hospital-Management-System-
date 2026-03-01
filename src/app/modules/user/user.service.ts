@@ -4,6 +4,8 @@ import { prisma } from "../../lib/prisma";
 import { ICreateDoctor } from "./Interface";
 import { UserRole } from "../../../generated/enums";
 import { Specialty } from "../../../generated/client";
+import { AppError } from "../../middleware/appError";
+import status from "http-status";
 
 
 const createDoctor = async (payload: ICreateDoctor) => {
@@ -13,14 +15,14 @@ const createDoctor = async (payload: ICreateDoctor) => {
             where: { id: specialtyId },
         });
         if (!existingSpecialty) {
-            throw new Error(`Specialty with id ${specialtyId} does not exist`);
+            throw new AppError(status.EXPECTATION_FAILED,`Specialty with id ${specialtyId} does not exist`);
         }
         specialties.push(existingSpecialty);
     };
 
     const user = await prisma.user.findUnique({ where: { email: payload.data.email } });
     if (user) {
-        throw new Error("User with this email already exists");
+        throw new AppError(status.CONFLICT,"User with this email already exists");
     };
 
 
@@ -36,7 +38,7 @@ const createDoctor = async (payload: ICreateDoctor) => {
     });
 
     if (!useData.user) {
-        throw new Error("User creation failed");
+        throw new AppError(status.BAD_REQUEST,"User creation failed");
     }
 
 
@@ -113,7 +115,7 @@ const createDoctor = async (payload: ICreateDoctor) => {
     } catch (error) {
         console.error("Error creating doctor record:", error);
         await prisma.user.delete({ where: { id: useData.user.id } });
-        throw new Error("Failed to create doctor record", { cause: error });
+        throw new AppError(status.BAD_REQUEST,"Failed to create doctor record");
 
     }
 

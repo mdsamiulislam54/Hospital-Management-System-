@@ -1,6 +1,8 @@
+import status from "http-status";
 import { User } from "../../../generated/client";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+import { AppError } from "../../middleware/appError";
 const createUser = async (payload: User & { password: string }) => {
     const { name, email, password } = payload;
     const data = await auth.api.signUpEmail({
@@ -11,10 +13,10 @@ const createUser = async (payload: User & { password: string }) => {
         }
     });
     if (!data.user) {
-        throw new Error("User creation failed");
+        throw new AppError(status.NOT_FOUND,"User creation failed");
     }
     if (data.user.status !== "ACTIVE") {
-        throw new Error("User is not active");
+        throw new AppError(status.NOT_FOUND,"User is not active");
     }
 
 
@@ -37,7 +39,7 @@ const createUser = async (payload: User & { password: string }) => {
     } catch (error) {
         console.error("Error creating patient record:", error);
         await prisma.user.delete({ where: { id: data.user.id } });
-        throw new Error("Failed to create patient record", { cause: error });
+        throw new AppError(status.NOT_FOUND,"Failed to create patient record");
     }
 };
 const signIn = async (payload: User & { password: string }) => {
@@ -50,7 +52,7 @@ const signIn = async (payload: User & { password: string }) => {
     });
 
     if (data.user.status !== "ACTIVE") {
-        throw new Error("User is not active");
+        throw new AppError(status.NOT_FOUND,"User is not active");
     }
     return data;
 };

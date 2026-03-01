@@ -1,5 +1,7 @@
+import status from "http-status";
 import { Doctor } from "../../../generated/client";
 import { prisma } from "../../lib/prisma";
+import { AppError } from "../../middleware/appError";
 
 const getAllDoctors = async () => {
     const doctors = await prisma.doctor.findMany({
@@ -149,7 +151,7 @@ const doctorDeleteById = async (id: string) => {
     });
 
     if (!deletedDoctor.user) {
-        throw new Error("User not found");
+        throw new AppError(status.NOT_FOUND,"User not found");
     }
 
     const deletedUser = await prisma.user.update({
@@ -203,7 +205,7 @@ const doctorRestoreById = async (id: string) => {
     });
 
     if (!restoredDoctor.user) {
-        throw new Error("User not found");
+        throw new AppError(status.NOT_FOUND,"User not found");
     }
 
     const restoredUser = await prisma.user.update({
