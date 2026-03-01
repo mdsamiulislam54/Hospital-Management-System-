@@ -2,9 +2,9 @@
 import { NextFunction, Request, Response } from "express";
 import z from "zod";
 import { IErrorSource, zodError } from "./zodError";
+import { envConfig } from "../../config/envConfig";
 
 export const globalErrorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
-
     let statusCode = 500;
     let message = err.message || "An unexpected error occurred";
     let errorSource: IErrorSource[] = [];
@@ -18,8 +18,9 @@ export const globalErrorHandler = (err: Error, req: Request, res: Response, _nex
     res.status(statusCode).json({
         success: false,
         statusCode,
-        message: message,
-        errorSource
+        errorSource,
+        message: envConfig.NODE_ENV === 'development' ? message : undefined,
+
     });
 
 }
