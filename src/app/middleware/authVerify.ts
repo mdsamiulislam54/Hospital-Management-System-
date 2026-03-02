@@ -68,7 +68,7 @@ export function authVerify(...roles: UserRole[]) {
             throw new AppError(status.FORBIDDEN, "Forbidden access! User is not authorized");
         }
 
-        console.log(verifyToken)
+        
        
 
         next()

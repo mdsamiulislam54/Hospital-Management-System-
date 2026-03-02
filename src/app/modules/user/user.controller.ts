@@ -6,11 +6,34 @@ import { userService } from "./user.service";
 
 const createDoctor = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
+
     const data = await userService.createDoctor(payload);
     sendResponse(res, {
         httpStatusCode: status.CREATED,
         success: true,
         message: "Doctor created successfully",
+        data: data
+    })
+})
+const createSuperAdmin = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+
+    const data = await userService.createSuperAdmin(payload);
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: "SuperAdmin created successfully",
+        data: data
+    })
+})
+const createAdmin = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+
+    const data = await userService.createAdmin(payload);
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: "Admin created successfully",
         data: data
     })
 })
@@ -26,6 +49,7 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 
 export const userController = {
     createDoctor,
-    getAllUsers
-   
+    getAllUsers,
+    createSuperAdmin,
+    createAdmin
 }

@@ -12,5 +12,6 @@ router.use('/api/v1/doctor', doctorRouter);
 // router.use('/api/v1/appointment');
 router.use('/api/v1/user', userRouter);
 router.use('/api/v1/auth', authRouter);
+// router.use('/api/v1/super-admin', authRouter);
 
 export const indexRouter = router; 

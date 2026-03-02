@@ -1,7 +1,7 @@
 
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateDoctor } from "./Interface";
+import { ICreateDoctor, ICreateSuperAdmin } from "./Interface";
 import { UserRole } from "../../../generated/enums";
 import { Specialty } from "../../../generated/client";
 import { AppError } from "../../middleware/AppError";
@@ -15,14 +15,14 @@ const createDoctor = async (payload: ICreateDoctor) => {
             where: { id: specialtyId },
         });
         if (!existingSpecialty) {
-            throw new AppError(status.EXPECTATION_FAILED,`Specialty with id ${specialtyId} does not exist`);
+            throw new AppError(status.EXPECTATION_FAILED, `Specialty with id ${specialtyId} does not exist`);
         }
         specialties.push(existingSpecialty);
     };
 
     const user = await prisma.user.findUnique({ where: { email: payload.data.email } });
     if (user) {
-        throw new AppError(status.CONFLICT,"User with this email already exists");
+        throw new AppError(status.CONFLICT, "User with this email already exists");
     };
 
 
@@ -38,7 +38,7 @@ const createDoctor = async (payload: ICreateDoctor) => {
     });
 
     if (!useData.user) {
-        throw new AppError(status.BAD_REQUEST,"User creation failed");
+        throw new AppError(status.BAD_REQUEST, "User creation failed");
     }
 
 
@@ -115,12 +115,118 @@ const createDoctor = async (payload: ICreateDoctor) => {
     } catch (error) {
         console.error("Error creating doctor record:", error);
         await prisma.user.delete({ where: { id: useData.user.id } });
-        throw new AppError(status.BAD_REQUEST,"Failed to create doctor record");
+        throw new AppError(status.BAD_REQUEST, "Failed to create doctor record");
 
     }
 
 }
 
+const createSuperAdmin = async (payload: ICreateSuperAdmin) => {
+    const { password, data } = payload;
+    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existingUser) { throw new AppError(status.BAD_REQUEST, "User already exist") };
+    const createUser = await auth.api.signUpEmail({
+        body: {
+            name: data.name,
+            email: data.email,
+            password: password,
+            role: UserRole.SUPER_ADMIN,
+            needPasswordChange: true
+        }
+    });
+
+    if (!createUser) {
+        throw new AppError(status.BAD_GATEWAY, "User create failed")
+    }
+
+    const admin = await prisma.$transaction(async (tx) => {
+        try {
+            const createAdmin = await tx.superAdmin.create({
+                data: {
+
+                    ...data,
+                    userId: createUser?.user?.id
+                }
+            });
+
+            const adminData = await tx.superAdmin.findUnique({
+                where: { id: createAdmin.id },
+                include: {
+                    
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            isDeleted: true,
+                            role: true,
+                            needPasswordChange: true
+                        }
+                    }
+                }
+            })
+            return adminData
+        } catch (error) {
+            console.log(error)
+            await prisma.user.delete({ where: { id: createUser.user.id  } })
+            throw new AppError(status.BAD_REQUEST, "Admin create failed")
+        }
+    });
+
+    return admin
+}
+const createAdmin = async (payload: ICreateSuperAdmin) => {
+    const { password, data } = payload;
+    const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existingUser) { throw new AppError(status.BAD_REQUEST, "User already exist") };
+    const createUser = await auth.api.signUpEmail({
+        body: {
+            name: data.name,
+            email: data.email,
+            password: password,
+            role: UserRole.ADMIN,
+            needPasswordChange: true
+        }
+    });
+
+    if (!createUser) {
+        throw new AppError(status.BAD_GATEWAY, "User create failed")
+    }
+
+    const admin = await prisma.$transaction(async (tx) => {
+        try {
+            const createAdmin = await tx.admin.create({
+                data: {
+
+                    ...data,
+                    userId: createUser?.user?.id
+                }
+            });
+
+            const adminData = await tx.admin.findUnique({
+                where: { id: createAdmin.id },
+                include: {
+                    
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            isDeleted: true,
+                            role: true,
+                            needPasswordChange: true
+                        }
+                    }
+                }
+            })
+            return adminData
+        } catch (error) {
+            console.log(error)
+            await prisma.user.delete({ where: { id: createUser.user.id  } })
+            throw new AppError(status.BAD_REQUEST, "Admin create failed")
+        }
+    });
+
+    return admin
+}
 const getAllUsers = async () => {
     const users = await prisma.user.findMany();
     return users;
@@ -132,5 +238,7 @@ const getAllUsers = async () => {
 
 export const userService = {
     createDoctor,
-    getAllUsers
+    getAllUsers,
+    createSuperAdmin,
+    createAdmin
 }
