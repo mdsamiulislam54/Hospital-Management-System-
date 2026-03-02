@@ -11,6 +11,13 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
 
+
+  baseURL: envConfig.BACKEND_URL,
+
+  trustedOrigins: ["http://localhost:3000","http://localhost:5000"],
+
+  withCredentials: true,
+
   session: {
     expiresIn: ms('1d') / 1000,
     updateAge: ms('1d') / 1000,
@@ -19,28 +26,6 @@ export const auth = betterAuth({
       maxAge: ms('1h')
     }
   },
-  baseURL: envConfig.BACKEND_URL,
-
-  trustedOrigins: [
-    envConfig.FRONTEND_URL,
-    envConfig.BACKEND_URL
-  ],
-
-  withCredentials: true,
-  cookies: {
-    sessionToken: {
-      name: "__Secure-better-auth.session_token",
-
-      attributes: {
-        httpOnly: true,
-        secure: envConfig.NODE_ENV === "production",
-        sameSite:
-          envConfig.NODE_ENV === "production" ? "none" : "lax",
-        path: "/",
-      },
-    },
-  },
-
   emailAndPassword: {
     enabled: true,
   },

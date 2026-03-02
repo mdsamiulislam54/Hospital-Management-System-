@@ -1,5 +1,6 @@
 
 import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
+import { success } from "zod";
 
 const createToken = (payload: JwtPayload, secret: string, { expiresIn }: SignOptions) => {
     const token = jwt.sign(payload, secret, { expiresIn });
@@ -8,8 +9,9 @@ const createToken = (payload: JwtPayload, secret: string, { expiresIn }: SignOpt
 
 const verifyToken = (token: string, secret: string) => {
     try {
-        const decode = jwt.verify(token, secret);
+        const decode = jwt.verify(token, secret) as JwtPayload;
         return {
+            success:true,
             data: decode
         }
     } catch (error: unknown) {
