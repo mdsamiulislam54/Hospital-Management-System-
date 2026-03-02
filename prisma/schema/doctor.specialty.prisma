@@ -1,11 +1,11 @@
 model DoctorSpecialty {
-  id String @id @default(uuid())
+  id String @id @default(uuid())  @db.Uuid
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   //          Relations
-  doctorId    String
-  specialtyId String
+  doctorId    String  @db.Uuid
+  specialtyId String  @db.Uuid
   specialty   Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   doctor      Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 

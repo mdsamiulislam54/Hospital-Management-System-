@@ -4,6 +4,7 @@ import { authRouter } from "../modules/auth/auth.router";
 import { userRouter } from "../modules/user/user.router";
 import { doctorRouter } from "../modules/doctor/doctor.router";
 import { adminRoute } from "../modules/admin/admin.route";
+import { superAdminRoute } from "../modules/superAdmin/superAdmin.route";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/api/v1/doctor', doctorRouter);
 router.use('/api/v1/user', userRouter);
 router.use('/api/v1/auth', authRouter);
 router.use('/api/v1/admin', adminRoute);
+router.use('/api/v1/super-admin', superAdminRoute);
 
 export const indexRouter = router; 

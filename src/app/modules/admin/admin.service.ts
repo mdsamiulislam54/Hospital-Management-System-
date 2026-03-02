@@ -1,4 +1,4 @@
-import { Admin } from "../../../generated/client"
+
 import { prisma } from "../../lib/prisma"
 import { IUpdateAdmin } from "./admin.interface"
 
