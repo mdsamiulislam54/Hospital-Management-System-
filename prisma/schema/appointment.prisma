@@ -19,5 +19,9 @@ model Appointment {
     review       Review?
     prescription Prescription?
 
+    @@index([doctorId])
+    @@index([doctorScheduleId])
+    @@index([videoCallingId])
+    @@index([patientId])
     @@map("appointment")
 }

@@ -218,13 +218,13 @@ CREATE TABLE "patient_health_data" (
 -- CreateTable
 CREATE TABLE "payment" (
     "id" UUID NOT NULL,
-    "appointmentId" UUID NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
-    "transactionId" UUID NOT NULL,
+    "transactionId" TEXT NOT NULL,
     "status" "PaymentStatus" NOT NULL DEFAULT 'UNPAID',
     "paymentGatewayData" JSONB NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "appointmentId" UUID NOT NULL,
 
     CONSTRAINT "payment_pkey" PRIMARY KEY ("id")
 );
@@ -237,6 +237,8 @@ CREATE TABLE "prescription" (
     "followupDate" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "patientId" UUID NOT NULL,
+    "doctorId" UUID NOT NULL,
 
     CONSTRAINT "prescription_pkey" PRIMARY KEY ("id")
 );
@@ -310,6 +312,18 @@ CREATE INDEX "admin_email_idx" ON "admin"("email");
 CREATE UNIQUE INDEX "appointment_doctorScheduleId_key" ON "appointment"("doctorScheduleId");
 
 -- CreateIndex
+CREATE INDEX "appointment_doctorId_idx" ON "appointment"("doctorId");
+
+-- CreateIndex
+CREATE INDEX "appointment_doctorScheduleId_idx" ON "appointment"("doctorScheduleId");
+
+-- CreateIndex
+CREATE INDEX "appointment_videoCallingId_idx" ON "appointment"("videoCallingId");
+
+-- CreateIndex
+CREATE INDEX "appointment_patientId_idx" ON "appointment"("patientId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "user_email_key" ON "user"("email");
 
 -- CreateIndex
@@ -340,10 +354,19 @@ CREATE INDEX "idx_doctor_email" ON "doctor"("email");
 CREATE INDEX "idx_doctor_isDeleted" ON "doctor"("isDeleted");
 
 -- CreateIndex
+CREATE INDEX "doctor_specialty_doctorId_idx" ON "doctor_specialty"("doctorId");
+
+-- CreateIndex
 CREATE INDEX "doctor-schedule_doctorId_idx" ON "doctor-schedule"("doctorId");
 
 -- CreateIndex
 CREATE INDEX "doctor-schedule_scheduleId_idx" ON "doctor-schedule"("scheduleId");
+
+-- CreateIndex
+CREATE INDEX "doctor-schedule_isBooking_idx" ON "doctor-schedule"("isBooking");
+
+-- CreateIndex
+CREATE INDEX "medical-report_patientId_idx" ON "medical-report"("patientId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "patient_email_key" ON "patient"("email");
@@ -361,19 +384,43 @@ CREATE INDEX "patient_isDeleted_idx" ON "patient"("isDeleted");
 CREATE UNIQUE INDEX "patient_health_data_patientId_key" ON "patient_health_data"("patientId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "payment_appointmentId_key" ON "payment"("appointmentId");
+CREATE INDEX "patient_health_data_patientId_idx" ON "patient_health_data"("patientId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "payment_transactionId_key" ON "payment"("transactionId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "payment_appointmentId_key" ON "payment"("appointmentId");
+
+-- CreateIndex
 CREATE INDEX "payment_transactionId_idx" ON "payment"("transactionId");
+
+-- CreateIndex
+CREATE INDEX "payment_appointmentId_idx" ON "payment"("appointmentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "prescription_appointmentId_key" ON "prescription"("appointmentId");
 
 -- CreateIndex
+CREATE INDEX "prescription_appointmentId_idx" ON "prescription"("appointmentId");
+
+-- CreateIndex
+CREATE INDEX "prescription_patientId_idx" ON "prescription"("patientId");
+
+-- CreateIndex
+CREATE INDEX "prescription_doctorId_idx" ON "prescription"("doctorId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "review_appointmentId_key" ON "review"("appointmentId");
+
+-- CreateIndex
+CREATE INDEX "review_patientId_idx" ON "review"("patientId");
+
+-- CreateIndex
+CREATE INDEX "review_doctorId_idx" ON "review"("doctorId");
+
+-- CreateIndex
+CREATE INDEX "review_appointmentId_idx" ON "review"("appointmentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "specialty_title_key" ON "specialty"("title");
@@ -437,6 +484,12 @@ ALTER TABLE "payment" ADD CONSTRAINT "payment_appointmentId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "prescription" ADD CONSTRAINT "prescription_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "appointment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "prescription" ADD CONSTRAINT "prescription_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "patient"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "prescription" ADD CONSTRAINT "prescription_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "doctor"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "review" ADD CONSTRAINT "review_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "appointment"("id") ON DELETE CASCADE ON UPDATE CASCADE;

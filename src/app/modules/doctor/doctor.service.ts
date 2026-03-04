@@ -1,62 +1,17 @@
 import status from "http-status";
-import { Doctor } from "../../../generated/client";
+import { Doctor, Status } from "../../../generated/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../middleware/AppError";
+import { IUpdateDoctorPayload } from "./doctor.interface";
 
 const getAllDoctors = async () => {
     const doctors = await prisma.doctor.findMany({
         where: {
             isDeleted: false
         },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            profilePhoto: true,
-            contactNumber: true,
-            registrationNumber: true,
-            currentWorkingPlace: true,
-            designation: true,
-            experience: true,
-            qualification: true,
-            appointmentFee: true,
-            isDeleted: true,
-
-            gender: true,
-            doctorSpecialties: {
-
-                select: {
-                    doctorId: true,
-                    id: true,
-
-                    specialty: {
-                        select: {
-                            id: true,
-                            title: true,
-                            icon: true,
-
-                        }
-                    }
-                }
-            },
-
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                    needPasswordChange: true,
-                    status: true,
-                    emailVerified: true,
-                    image: true,
-                    createdAt: true,
-                    updatedAt: true,
-                }
-            },
-
-            createdAt: true,
-            updatedAt: true,
+        include: {
+            user: true,
+            doctorSpecialties: true
         }
     });
     return doctors;
@@ -69,107 +24,125 @@ const getDoctorById = async (id: string) => {
             id: id,
             isDeleted: false
         },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            profilePhoto: true,
-            contactNumber: true,
-            registrationNumber: true,
-            currentWorkingPlace: true,
-            designation: true,
-            experience: true,
-            qualification: true,
-            appointmentFee: true,
+        include: {
+            user: true,
+            doctorSchedules: {
+                include: {
+                    schedule: true
+                }
+            },
+            appointment: {
+                include: {
+                    patient: true,
+                    prescription: true,
+                    doctorschedule: true
 
-            gender: true,
-
+                }
+            },
+            review: true,
+            doctorSpecialties: true
         }
     });
     return doctor;
 }
 
-const doctorUpdateById = async (id: string, payload: Partial<Doctor>) => {
-    const doctor = await prisma.doctor.update({
-        where: {
-            id: id,
-            isDeleted: false
-        },
-        data: payload,
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            profilePhoto: true,
-            contactNumber: true,
-            registrationNumber: true,
-            currentWorkingPlace: true,
-            designation: true,
-            experience: true,
-            qualification: true,
-            appointmentFee: true,
+const doctorUpdateById = async (id: string, payload: Partial<IUpdateDoctorPayload>) => {
+    console.log({DoctorId: id})
+    const isDoctorExist = await prisma.doctor.findUnique({ where: { id } });
 
-            gender: true,
+    if (!isDoctorExist) {
+        throw new AppError(status.NOT_FOUND, "Doctor not found");
+    };
 
+    const { doctor: doctorData, specialties } = payload;
+
+    await prisma.$transaction(async (tx) => {
+        if (doctorData) {
+            await tx.doctor.update({
+                where: {
+                    id,
+                },
+                data: {
+                    ...doctorData,
+                }
+            });
+
+            if (specialties && specialties.length > 0) {
+                for (const specialty of specialties) {
+                    const { specialtyId, shouldDelete } = specialty;
+                    if (shouldDelete) {
+                        await tx.doctorSpecialty.delete({
+                            where: {
+                                doctorId_specialtyId: {
+                                    specialtyId,
+                                    doctorId: id
+                                }
+                            }
+                        })
+                    } else {
+                        await tx.doctorSpecialty.upsert({
+                            where: {
+                                doctorId_specialtyId: {
+                                    specialtyId:specialtyId,
+                                    doctorId: id
+                                }
+                            },
+                            create: {
+                               specialtyId: specialtyId,
+                                doctorId: id
+                            },
+                            update: {}
+                        })
+                    }
+                }
+            }
         }
-    });
-    return doctor;
+    })
+
+    const doctor = await getDoctorById(id)
+    return doctor
+
+
 }
 
 
 const doctorDeleteById = async (id: string) => {
-    const deletedDoctor = await prisma.doctor.update({
-        where: {
-            id,
-            isDeleted: false
-        },
-        data: {
+    const isDoctorExist = await prisma.doctor.findUnique({
+        where: { id },
+        include: { user: true }
+    })
 
-            isDeleted: true,
-            deletedAt: new Date()
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                }
-            },
-            doctorSpecialties: {
-                select: {
-                    doctor: {
-                        select: {
-                            id: true,
-                            isDeleted: true,
-                            deletedAt: true,
-                            name: true,
-                        }
-                    }
-                }
-            }
-
-        }
-    });
-
-    if (!deletedDoctor.user) {
-        throw new AppError(status.NOT_FOUND,"User not found");
+    if (!isDoctorExist) {
+        throw new AppError(status.NOT_FOUND, "Doctor not found");
     }
 
-    const deletedUser = await prisma.user.update({
-        where: {
-            id: deletedDoctor.user.id
-        },
-        data: {
-            isDeleted: true,
-            status: "INACTIVE"
-        },
-        select: {
-            id: true,
-            isDeleted: true,
-            status: true
-        }
-    });
+    await prisma.$transaction(async (tx) => {
+        await tx.doctor.update({
+            where: { id },
+            data: {
+                isDeleted: true,
+                deletedAt: new Date()
+            }
+        });
 
-    return { deletedDoctor, deletedUser };
+        await tx.user.update({
+            where: { id: isDoctorExist.userid },
+            data: {
+                isDeleted: true,
+                status: Status.BLOCKED
+
+            }
+        })
+        await tx.session.deleteMany({
+            where: { userId: isDoctorExist.userid }
+        })
+
+        await tx.doctorSpecialty.deleteMany({
+            where: { doctorId: id }
+        })
+    })
+
+    return { message: "Doctor deleted successfully" };
 };
 const doctorRestoreById = async (id: string) => {
     const restoredDoctor = await prisma.doctor.update({
@@ -205,7 +178,7 @@ const doctorRestoreById = async (id: string) => {
     });
 
     if (!restoredDoctor.user) {
-        throw new AppError(status.NOT_FOUND,"User not found");
+        throw new AppError(status.NOT_FOUND, "User not found");
     }
 
     const restoredUser = await prisma.user.update({

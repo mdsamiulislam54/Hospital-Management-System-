@@ -22,6 +22,6 @@ model PatientHealthData {
 
   // Relations
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
+  @@index([patientId])
   @@map("patient_health_data")
 }

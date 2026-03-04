@@ -1,5 +1,5 @@
 model Doctor {
-  id                  String  @id @default(uuid())  @db.Uuid
+  id                  String  @id @default(uuid()) @db.Uuid
   name                String
   email               String  @unique
   profilePhoto        String?
@@ -17,13 +17,14 @@ model Doctor {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  userid String @unique  
+  userid String @unique
   user   User   @relation(fields: [userid], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   doctorSpecialties DoctorSpecialty[]
   doctorSchedules   DoctorSchedule[]
   appointment       Appointment[]
   review            Review[]
+  prescriptions     Prescription[]
 
   @@index([email], name: "idx_doctor_email")
   @@index([isDeleted], name: "idx_doctor_isDeleted")
