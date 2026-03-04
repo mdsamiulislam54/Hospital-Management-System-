@@ -152,7 +152,7 @@ const createSuperAdmin = async (payload: ICreateSuperAdmin) => {
             const adminData = await tx.superAdmin.findUnique({
                 where: { id: createAdmin.id },
                 include: {
-                    
+
                     user: {
                         select: {
                             id: true,
@@ -167,7 +167,7 @@ const createSuperAdmin = async (payload: ICreateSuperAdmin) => {
             return adminData
         } catch (error) {
             console.log(error)
-            await prisma.user.delete({ where: { id: createUser.user.id  } })
+            await prisma.user.delete({ where: { id: createUser.user.id } })
             throw new AppError(status.BAD_REQUEST, "Admin create failed")
         }
     });
@@ -205,7 +205,7 @@ const createAdmin = async (payload: ICreateSuperAdmin) => {
             const adminData = await tx.admin.findUnique({
                 where: { id: createAdmin.id },
                 include: {
-                    
+
                     user: {
                         select: {
                             id: true,
@@ -220,7 +220,7 @@ const createAdmin = async (payload: ICreateSuperAdmin) => {
             return adminData
         } catch (error) {
             console.log(error)
-            await prisma.user.delete({ where: { id: createUser.user.id  } })
+            await prisma.user.delete({ where: { id: createUser.user.id } })
             throw new AppError(status.BAD_REQUEST, "Admin create failed")
         }
     });
@@ -229,6 +229,35 @@ const createAdmin = async (payload: ICreateSuperAdmin) => {
 }
 const getAllUsers = async () => {
     const users = await prisma.user.findMany();
+    return users;
+}
+const getMe = async (userId: string) => {
+    const users = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            admin: true,
+            superAdmin: true,
+            doctors: {
+                include: {
+                    appointment: true,
+                    doctorSchedules: true,
+                    prescriptions: true,
+                    review: true,
+                    doctorSpecialties: true,
+                    user: true
+                }
+            },
+            patients: {
+                include: {
+                    appointment: true,
+                    medicalReport: true,
+                    prescriptions: true,
+                    review: true,
+                    user: true
+                }
+            }
+        }
+    });
     return users;
 }
 
@@ -240,5 +269,6 @@ export const userService = {
     createDoctor,
     getAllUsers,
     createSuperAdmin,
-    createAdmin
+    createAdmin,
+    getMe
 }

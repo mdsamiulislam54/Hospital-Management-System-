@@ -6,6 +6,7 @@ import status from "http-status";
 import { prisma } from "../lib/prisma";
 import { jwtUtils } from "../utils/jwt";
 import { envConfig } from "../../config/envConfig";
+import { role } from "better-auth/plugins";
 
 export function authVerify(...roles: UserRole[]) {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -48,9 +49,15 @@ export function authVerify(...roles: UserRole[]) {
                     throw new AppError(status.FORBIDDEN, "Forbidden access! User is not authorized");
                 }
 
+                req.user = {
+                    userId:user.id,
+                    role:user.role,
+                    email:user.email
+                }
+
             }
 
-            console.log(sessionExists)
+            
 
         }
 

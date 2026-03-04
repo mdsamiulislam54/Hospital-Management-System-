@@ -46,10 +46,22 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
         data: data
     })
 })
+const getMe = catchAsync(async (req: Request, res: Response) => {
+    console.log({user:req.user})
+    const userId = req.user.userId as string
+    const data = await userService.getMe(userId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User retrieved successfully",
+        data: data
+    })
+})
 
 export const userController = {
     createDoctor,
     getAllUsers,
     createSuperAdmin,
-    createAdmin
+    createAdmin,
+    getMe
 }
