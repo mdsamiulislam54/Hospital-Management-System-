@@ -7,7 +7,7 @@ import { tokenUtils } from "../../utils/token";
 import { jwtUtils } from "../../utils/jwt";
 import { envConfig } from "../../../config/envConfig";
 import { JwtPayload } from "jsonwebtoken";
-import { IUserChangePassword } from "./auth.interface";
+import { IEmailVerification, IUserChangePassword } from "./auth.interface";
 const createUser = async (payload: User & { password: string }) => {
     const { name, email, password } = payload;
     const data = await auth.api.signUpEmail({
@@ -218,10 +218,31 @@ const changePassword = async (payload: IUserChangePassword, sessionToken: string
         refreshToken
     }
 }
+
+const emailVerification = async (payload: IEmailVerification) => {
+    const { otp, email } = payload;
+    const data = await auth.api.verifyEmailOTP({
+        body: {
+            email,
+            otp
+        }
+    });
+    if (data.status && !data.user.emailVerified) {
+        await prisma.user.update({
+            where: {
+                email
+            },
+            data: {
+                emailVerified: true
+            }
+        })
+    }
+}
 export const authService = {
     createUser,
     signIn,
     signOut,
     getNewToken,
-    changePassword
+    changePassword,
+    emailVerification
 }

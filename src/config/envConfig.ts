@@ -17,6 +17,10 @@ interface EnvConfig {
     REFRESH_TOKEN_SECRET?: string;
     ACCESS_TOKEN_EXPIRE_IN?: string;
     REFRESH_TOKEN_EXPIRE_IN?: string;
+    SENDER_EMAIL_APP_PASS: string;
+    SENDER_EMAIL_APP_FORM: string;
+    SENDER_EMAIL_APP_PORT: string;
+    SENDER_EMAIL_APP_SMTP: string;
 }
 
 
@@ -33,7 +37,11 @@ const loadEnvConfig: () => EnvConfig = () => {
         'ACCESS_TOKEN_SECRET',
         'REFRESH_TOKEN_SECRET',
         'ACCESS_TOKEN_EXPIRE_IN',
-        'REFRESH_TOKEN_EXPIRE_IN'
+        'REFRESH_TOKEN_EXPIRE_IN',
+        'SENDER_EMAIL_APP_PASS',
+        'SENDER_EMAIL_APP_FORM',
+        'SENDER_EMAIL_APP_PORT',
+        'SENDER_EMAIL_APP_SMTP',
     ];
 
     requiredEnvVars.forEach((varName) => {
@@ -49,10 +57,14 @@ const loadEnvConfig: () => EnvConfig = () => {
         NODE_ENV: process.env.NODE_ENV as string,
         BETTER_AUTH_URL: process.env.BETTER_AUTH_URL as string || "",
         BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET as string,
-        ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
-        REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
-        ACCESS_TOKEN_EXPIRE_IN: process.env.ACCESS_TOKEN_EXPIRE_IN,
-        REFRESH_TOKEN_EXPIRE_IN: process.env.REFRESH_TOKEN_EXPIRE_IN
+        ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET as string,
+        REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET as string,
+        ACCESS_TOKEN_EXPIRE_IN: process.env.ACCESS_TOKEN_EXPIRE_IN as string,
+        REFRESH_TOKEN_EXPIRE_IN: process.env.REFRESH_TOKEN_EXPIRE_IN as string,
+        SENDER_EMAIL_APP_PASS: process.env.SENDER_EMAIL_APP_PASS as string,
+        SENDER_EMAIL_APP_FORM: process.env.SENDER_EMAIL_APP_FORM as string,
+        SENDER_EMAIL_APP_PORT: process.env.SENDER_EMAIL_APP_PORT as string,
+        SENDER_EMAIL_APP_SMTP: process.env.SENDER_EMAIL_APP_SMTP as string
 
     }
 }

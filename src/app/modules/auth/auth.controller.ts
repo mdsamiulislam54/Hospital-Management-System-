@@ -112,6 +112,17 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
+const emailVerification = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+    await authService.emailVerification(payload);
+
+    sendResponse(res, {
+        httpStatusCode: 200,
+        success: true,
+        message: "Email Verification successfully",
+    })
+})
+
 
 
 
@@ -121,6 +132,7 @@ export const authController = {
     signIn,
     signOut,
     getNewToken,
-    changePassword
+    changePassword,
+    emailVerification
 
 }

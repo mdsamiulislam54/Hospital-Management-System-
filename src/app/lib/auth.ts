@@ -4,22 +4,51 @@ import { prisma } from "./prisma";
 import { Status, UserRole } from "../../generated/enums";
 import { envConfig } from "../../config/envConfig";
 import ms from "ms";
-import { bearer } from "better-auth/plugins";
+import { bearer, emailOTP } from "better-auth/plugins";
+import { sendEmail } from "../utils/email";
+
 
 export const auth = betterAuth({
 
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
-
-
   baseURL: envConfig.BACKEND_URL,
-
-  trustedOrigins: ["http://localhost:3000","http://localhost:5000"],
-
+  trustedOrigins: ["http://localhost:3000", "http://localhost:5000"],
   withCredentials: true,
 
-  plugins:[bearer()],
+  plugins: [
+    bearer(),
+    emailOTP({
+      overrideDefaultEmailVerification: true,
+      async sendVerificationOTP({ email, otp, type }) {
+
+        if (type === "email-verification") {
+          const user = await prisma.user.findUnique({
+            where: {
+              email
+            }
+          })
+
+          if (user && !user.emailVerified) {
+            sendEmail({
+              to: email,
+              subject: "Email Verification OTP",
+              templateName: 'otp',
+              templateData: {
+                otp,
+                name: user.name
+              }
+            })
+          }
+        }
+      },
+      expiresIn: 2 * 60,
+      otpLength: 6
+
+    })
+  ],
+
   session: {
     expiresIn: ms('1d') / 1000,
     updateAge: ms('1d') / 1000,
@@ -30,6 +59,7 @@ export const auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true
   },
 
   user: {
