@@ -3,6 +3,14 @@ import catchAsync from "../../shared/catchAsync";
 import { authService } from "./auth.service";
 import { sendResponse } from "../../shared/sendResponse";
 import { tokenUtils } from "../../utils/token";
+import { cookieUtils } from "../../utils/cookie";
+import { prisma } from "../../lib/prisma";
+import { APIError } from "better-auth";
+import status from "http-status";
+import { AppError } from "../../middleware/AppError";
+import { auth } from "../../lib/auth";
+import { IUserChangePassword } from "./auth.interface";
+import { revokeOtherSessions } from "better-auth/api";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -46,8 +54,23 @@ const signIn = catchAsync(async (req: Request, res: Response) => {
 });
 
 const signOut = catchAsync(async (req: Request, res: Response) => {
-    const headers = req.headers as Record<string, string>;
-    const data = await authService.signOut(headers);
+    const sessionToken = cookieUtils.getCookie(req, 'better-auth.session_token')
+    const data = await authService.signOut(sessionToken);
+    cookieUtils.clearCookie(res, 'accessToken', {
+        httpOnly: true,
+        secure: true,
+        path: '/'
+    })
+    cookieUtils.clearCookie(res, 'refreshToken', {
+        httpOnly: true,
+        secure: true,
+        path: '/'
+    })
+    cookieUtils.clearCookie(res, 'better-auth.session_token', {
+        httpOnly: true,
+        secure: true,
+        path: '/'
+    })
     sendResponse(res, {
         httpStatusCode: 200,
         success: true,
@@ -66,10 +89,28 @@ const getNewToken = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         httpStatusCode: 200,
         success: true,
-        message: "User signed out successfully",
+        message: "Refresh Token Generate successfully",
         data
     })
 });
+
+
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+    const sessionToken = cookieUtils.getCookie(req, 'better-auth.session_token');
+    const payload = req.body;
+    const data = await authService.changePassword(payload, sessionToken);
+    const { accessToken, refreshToken, token } = data;
+    tokenUtils.setAccessTokenCookie(res, accessToken)
+    tokenUtils.setRefreshTokenCookie(res, refreshToken)
+    tokenUtils.setBetterAuthTokenCookie(res, token as string)
+
+    sendResponse(res, {
+        httpStatusCode: 200,
+        success: true,
+        message: "Password Change successfully",
+        data
+    })
+})
 
 
 
@@ -79,6 +120,7 @@ export const authController = {
     createUser,
     signIn,
     signOut,
-    getNewToken
+    getNewToken,
+    changePassword
 
 }

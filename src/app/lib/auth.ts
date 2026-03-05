@@ -4,6 +4,7 @@ import { prisma } from "./prisma";
 import { Status, UserRole } from "../../generated/enums";
 import { envConfig } from "../../config/envConfig";
 import ms from "ms";
+import { bearer } from "better-auth/plugins";
 
 export const auth = betterAuth({
 
@@ -18,6 +19,7 @@ export const auth = betterAuth({
 
   withCredentials: true,
 
+  plugins:[bearer()],
   session: {
     expiresIn: ms('1d') / 1000,
     updateAge: ms('1d') / 1000,
