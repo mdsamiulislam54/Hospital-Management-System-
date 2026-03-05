@@ -4,6 +4,9 @@ import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../middleware/AppError";
 import { tokenUtils } from "../../utils/token";
+import { jwtUtils } from "../../utils/jwt";
+import { envConfig } from "../../../config/envConfig";
+import { JwtPayload } from "jsonwebtoken";
 const createUser = async (payload: User & { password: string }) => {
     const { name, email, password } = payload;
     const data = await auth.api.signUpEmail({
@@ -109,8 +112,64 @@ const signOut = async (headers: Record<string, string>) => {
 };
 
 
+const getNewToken = async (refreshToken: string, sessionToken: string) => {
+
+    const isExistSessionToken = await prisma.session.findUnique({
+        where: {
+            token: sessionToken
+        },
+        include: {
+            user: true
+        }
+    });
+
+
+    if (!isExistSessionToken) {
+        throw new AppError(status.UNAUTHORIZED, "User session token not valid");
+    }
+    const verifyToken = jwtUtils.verifyToken(refreshToken, envConfig.REFRESH_TOKEN_SECRET!);
+    if (!verifyToken.success && verifyToken.error) {
+        throw new AppError(status.UNAUTHORIZED, "Refresh token is not valid")
+    };
+    const { data } = verifyToken as JwtPayload;
+
+    const newAccessToken = tokenUtils.getAccessToken({
+        userId: data.userId,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        emailVerify: data.emailVerified,
+        status: data.status,
+        isDeleted: data.isDeleted
+    });
+    const newRefreshToken = tokenUtils.getRefreshToken({
+        userId: data.userId,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        emailVerify: data.emailVerified,
+        status: data.status,
+        isDeleted: data.isDeleted
+    });
+
+    const { token } = await prisma.session.update({
+        where: {
+            token: sessionToken
+        },
+        data: {
+            token: sessionToken,
+            expiresAt: new Date(Date.now() + 60 * 60 * 60 * 24 * 1000),
+            updatedAt: new Date()
+        }
+    })
+
+    return { newAccessToken, newRefreshToken, sessionToken: token }
+}
+
+
 export const authService = {
     createUser,
     signIn,
-    signOut
+    signOut,
+    getNewToken
 }

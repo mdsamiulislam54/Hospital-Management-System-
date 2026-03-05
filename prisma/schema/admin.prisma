@@ -14,5 +14,6 @@ model Admin {
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
     @@index([email])
+    @@index([isDeleted])
     @@map("admin")
 }

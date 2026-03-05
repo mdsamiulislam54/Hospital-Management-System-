@@ -10,8 +10,8 @@ const router = Router()
 router.get('/', authVerify(UserRole.ADMIN, UserRole.SUPER_ADMIN), adminController.getAllAdmin);
 router.get('/:id', authVerify(UserRole.ADMIN, UserRole.SUPER_ADMIN), adminController.getAdminById);
 
-router.patch('/:id', authVerify(UserRole.ADMIN, UserRole.SUPER_ADMIN), zodValidationMiddleware(updateAdminZodSchema), adminController.updateAdmin);
+router.patch('/:id', authVerify(UserRole.SUPER_ADMIN), zodValidationMiddleware(updateAdminZodSchema), adminController.updateAdmin);
 
-router.patch('/delete/:id', authVerify(UserRole.ADMIN, UserRole.SUPER_ADMIN), adminController.deleteAdmin);
+router.patch('/delete/:id', authVerify(UserRole.SUPER_ADMIN), adminController.deleteAdmin);
 
 export const adminRoute = router;

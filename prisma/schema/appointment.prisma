@@ -5,7 +5,7 @@ model Appointment {
     doctorScheduleId String            @unique @db.Uuid
     videoCallingId   String
     status           AppointmentStatus @default(SCHEDULED)
-    isDelete         Boolean
+    isDeleted         Boolean
     deletedAt        DateTime
     paymentStatus    PaymentStatus     @default(UNPAID)
     createdAt        DateTime          @default(now())
@@ -23,5 +23,6 @@ model Appointment {
     @@index([doctorScheduleId])
     @@index([videoCallingId])
     @@index([patientId])
+    @@index([isDeleted])
     @@map("appointment")
 }

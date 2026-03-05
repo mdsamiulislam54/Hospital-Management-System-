@@ -55,6 +55,21 @@ const signOut = catchAsync(async (req: Request, res: Response) => {
         data
     })
 });
+const getNewToken = catchAsync(async (req: Request, res: Response) => {
+    const refreshToken = req.cookies["refreshToken"]
+    const betterAuthSessionToken = req.cookies["better-auth.session_token"];
+    const data = await authService.getNewToken(refreshToken, betterAuthSessionToken);
+    const { newAccessToken, newRefreshToken, sessionToken } = data;
+    tokenUtils.setAccessTokenCookie(res, newAccessToken)
+    tokenUtils.setRefreshTokenCookie(res, newRefreshToken)
+    tokenUtils.setBetterAuthTokenCookie(res, sessionToken)
+    sendResponse(res, {
+        httpStatusCode: 200,
+        success: true,
+        message: "User signed out successfully",
+        data
+    })
+});
 
 
 
@@ -63,6 +78,7 @@ const signOut = catchAsync(async (req: Request, res: Response) => {
 export const authController = {
     createUser,
     signIn,
-    signOut
+    signOut,
+    getNewToken
 
 }
