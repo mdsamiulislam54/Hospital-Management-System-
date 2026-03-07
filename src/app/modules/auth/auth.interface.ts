@@ -8,3 +8,9 @@ export interface IEmailVerification {
     email:string
 
 }
+export interface IRestPassword {
+    otp: string,
+    email:string
+    resetPassword:string
+
+}

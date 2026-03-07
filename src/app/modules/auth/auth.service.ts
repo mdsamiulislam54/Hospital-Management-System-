@@ -7,7 +7,8 @@ import { tokenUtils } from "../../utils/token";
 import { jwtUtils } from "../../utils/jwt";
 import { envConfig } from "../../../config/envConfig";
 import { JwtPayload } from "jsonwebtoken";
-import { IEmailVerification, IUserChangePassword } from "./auth.interface";
+import { IEmailVerification, IRestPassword, IUserChangePassword } from "./auth.interface";
+
 const createUser = async (payload: User & { password: string }) => {
     const { name, email, password } = payload;
     const data = await auth.api.signUpEmail({
@@ -82,6 +83,7 @@ const signIn = async (payload: User & { password: string }) => {
     };
 
     const accessToken = tokenUtils.getAccessToken({
+        userId: data.user.id,
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
@@ -90,6 +92,7 @@ const signIn = async (payload: User & { password: string }) => {
         isDeleted: data.user.isDeleted
     });
     const refreshToken = tokenUtils.getRefreshToken({
+        userId: data.user.id,
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
@@ -184,6 +187,17 @@ const changePassword = async (payload: IUserChangePassword, sessionToken: string
     if (!sessionUser) {
         throw new AppError(status.UNAUTHORIZED, "Session not found");
     };
+
+    if (sessionUser.user.needPasswordChange) {
+        await prisma.user.update({
+            where: {
+                id: sessionUser.user.id
+            },
+            data: {
+                needPasswordChange: false
+            }
+        })
+    }
     const updatePassword = await auth.api.changePassword({
         body: {
             currentPassword: payload.currentPassword,
@@ -196,6 +210,7 @@ const changePassword = async (payload: IUserChangePassword, sessionToken: string
     });
 
     const accessToken = tokenUtils.getAccessToken({
+        userId: sessionUser.user.id,
         name: sessionUser.user.name,
         email: sessionUser.user.email,
         role: sessionUser.user.role,
@@ -204,6 +219,7 @@ const changePassword = async (payload: IUserChangePassword, sessionToken: string
         isDeleted: sessionUser.user.isDeleted
     });
     const refreshToken = tokenUtils.getRefreshToken({
+        userId: sessionUser.user.id,
         name: sessionUser.user.name,
         email: sessionUser.user.email,
         role: sessionUser.user.role,
@@ -237,12 +253,79 @@ const emailVerification = async (payload: IEmailVerification) => {
             }
         })
     }
+};
+
+const forgetPassword = async (email: string) => {
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            email
+        }
+    });
+
+    if (!isExistUser) {
+        throw new AppError(status.BAD_REQUEST, 'User not found')
+    }
+
+    if (!isExistUser.emailVerified) {
+        throw new AppError(status.BAD_REQUEST, "Your email not verified!")
+    }
+    if (isExistUser.status === "BLOCKED" || isExistUser.status === 'INACTIVE') {
+        throw new AppError(status.BAD_REQUEST, "This user is deleted")
+    }
+
+    return await auth.api.requestPasswordResetEmailOTP({
+        body: {
+            email
+        }
+    })
 }
+
+
+const resetPass = async (payload: IRestPassword) => {
+    const { email, otp, resetPassword } = payload;
+
+    const user = await prisma.user.findUnique({
+        where: { email }
+    });
+
+    if (!user) {
+        throw new AppError(status.BAD_REQUEST, "User not found");
+    }
+
+    if (!user.emailVerified) {
+        throw new AppError(status.BAD_REQUEST, "Your email is not verified");
+    }
+
+    if (user.status === "BLOCKED" || user.status === "INACTIVE") {
+        throw new AppError(status.BAD_REQUEST, "This user is not active");
+    }
+
+    await auth.api.resetPasswordEmailOTP({
+        body: {
+            email,
+            otp,
+            password: resetPassword
+        }
+    });
+
+    await prisma.session.deleteMany({
+        where: {
+            userId: user.id
+        }
+    });
+
+    return {
+        message: "Password reset successful"
+    };
+};
+
 export const authService = {
     createUser,
     signIn,
     signOut,
     getNewToken,
     changePassword,
-    emailVerification
+    emailVerification,
+    forgetPassword,
+    resetPass
 }
