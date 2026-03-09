@@ -3,9 +3,11 @@ import catchAsync from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import { doctorService } from "./doctor.service";
 import status from "http-status";
+import { IQueryParams } from "../../../interface/query.interface";
 
 const getAllDoctors = catchAsync(async (req: Request, res: Response) => {
-    const data = await doctorService.getAllDoctors();
+    const query = req.query as IQueryParams
+    const data = await doctorService.getAllDoctors(query);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

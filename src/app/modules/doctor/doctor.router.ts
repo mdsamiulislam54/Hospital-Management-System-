@@ -4,7 +4,7 @@ import { authVerify } from "../../middleware/authVerify";
 import { UserRole } from "../../../generated/enums";
 
 const router = Router();
-router.get('/', authVerify(UserRole.ADMIN, UserRole.SUPER_ADMIN), doctorController.getAllDoctors);
+router.get('/',  doctorController.getAllDoctors);
 router.get('/:id', authVerify(UserRole.ADMIN, UserRole.SUPER_ADMIN), doctorController.getDoctorById);
 
 

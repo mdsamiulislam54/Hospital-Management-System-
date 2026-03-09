@@ -1,20 +1,41 @@
 import status from "http-status";
-import { Doctor, Status } from "../../../generated/client";
+import { Doctor, Prisma, Status } from "../../../generated/client";
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../middleware/AppError";
 import { IUpdateDoctorPayload } from "./doctor.interface";
+import { QueryBuilder } from "../../utils/Querybuilder";
+import { doctorFilterableFields, doctorSearchableFields } from "./doctor.constant";
+import { IQueryParams } from "../../../interface/query.interface";
 
-const getAllDoctors = async () => {
-    const doctors = await prisma.doctor.findMany({
-        where: {
-            isDeleted: false
-        },
-        include: {
-            user: true,
-            doctorSpecialties: true
+const getAllDoctors = async (query: IQueryParams) => {
+   
+    const queryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(
+        prisma.doctor,
+        query,
+        {
+            searchableFields:doctorSearchableFields,
+            filterableFields:doctorFilterableFields
         }
-    });
-    return doctors;
+    
+    )
+
+    const result = await queryBuilder
+    .search()
+    .fields()
+    .filter()
+    .include({
+        user:true,
+        appointment:true,
+        doctorSchedules:true,
+        doctorSpecialties:true,
+        prescriptions:true,
+        review:true
+    })
+    .paginate()
+    .sort()
+    .execute();
+
+    return result
 
 }
 
@@ -47,7 +68,7 @@ const getDoctorById = async (id: string) => {
 }
 
 const doctorUpdateById = async (id: string, payload: Partial<IUpdateDoctorPayload>) => {
-    console.log({DoctorId: id})
+    console.log({ DoctorId: id })
     const isDoctorExist = await prisma.doctor.findUnique({ where: { id } });
 
     if (!isDoctorExist) {
@@ -83,12 +104,12 @@ const doctorUpdateById = async (id: string, payload: Partial<IUpdateDoctorPayloa
                         await tx.doctorSpecialty.upsert({
                             where: {
                                 doctorId_specialtyId: {
-                                    specialtyId:specialtyId,
+                                    specialtyId: specialtyId,
                                     doctorId: id
                                 }
                             },
                             create: {
-                               specialtyId: specialtyId,
+                                specialtyId: specialtyId,
                                 doctorId: id
                             },
                             update: {}
